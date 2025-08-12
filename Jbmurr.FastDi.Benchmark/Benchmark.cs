@@ -2,6 +2,7 @@
 using Autofac.Util;
 using BenchmarkDotNet.Attributes;
 using DependencyExample;
+using Jbmurr.FastDi.Benchmark;
 using Jbmurr.FastDI.Abstractions;
 using Jbmurr.FastDI.Tests;
 using Microsoft.Extensions.DependencyInjection;
@@ -128,12 +129,14 @@ public class Benchmark
         }
     }
 
-    //[Benchmark]
-    //public void Mine()
-    //{
+    [Benchmark]
+    public void Mine()
+    {
 
-    //    //_myContainer.GetService<MainClass>();
-    //}
+        var x = new RecursiveCost();
+
+        x.NTimes(1000);
+    }
 
 
     [Benchmark]
