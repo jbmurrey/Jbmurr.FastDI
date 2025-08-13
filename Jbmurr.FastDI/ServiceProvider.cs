@@ -1,6 +1,6 @@
 ﻿namespace Jbmurr.FastDI
 {
-    internal class ServiceProvider : Abstractions.IServiceProvider
+    internal sealed class ServiceProvider : Abstractions.IServiceProvider
     {
         internal HashSet<IDisposable>? DisposibleInstances { get; set; }
         private readonly RootServiceProvider _rootServiceProvider;

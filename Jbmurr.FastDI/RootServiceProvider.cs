@@ -1,35 +1,42 @@
 ﻿using Jbmurr.FastDI.Abstractions;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 
 namespace Jbmurr.FastDI
 {
-    internal class RootServiceProvider : Abstractions.IServiceProvider
+    internal sealed class RootServiceProvider : Abstractions.IServiceProvider
     {
         private readonly ConcurrentDictionary<ServiceProvider, ConcurrentDictionary<Service, object>> _cachedScopedInstances = new();
         private readonly ConcurrentDictionary<Service, object> _cachedRootInstances = new();
-        private readonly ConcurrentDictionary<Service, Func<ServiceProvider, object>> _cachedInstanceProviders = new();
+        private readonly Func<ServiceProvider, object>[] _cachedInstanceProviders;
         private HashSet<IDisposable> _disposibleInstances = [];
-        private readonly CategorizedServiceCollection _categorizedServiceCollection;
+        private readonly Service[] _serviceCollection;
+        private readonly Service[] _keyedServiceCollection;
         private readonly IInstanceProvider _instanceProvider;
+        private readonly ServiceProvider _rootServiceProvider;
 
         internal RootServiceProvider(ServiceCollection serviceCollection, IInstanceProvider instanceProvider)
         {
             _instanceProvider = instanceProvider;
-            _categorizedServiceCollection = new CategorizedServiceCollection(serviceCollection);
+            _rootServiceProvider = new ServiceProvider(this);   
+            _serviceCollection = [.. serviceCollection];
+            _keyedServiceCollection = new Service[_serviceCollection.Length];
+            _cachedInstanceProviders =  new Func<ServiceProvider, object>[_serviceCollection.Length];
             AddInstanceProviders();
         }
 
         private void AddInstanceProviders()
         {
-            foreach (var service in _categorizedServiceCollection.Combined)
-            {
-                bool canAddInstanceProvider = _cachedInstanceProviders.TryAdd(service.Value, _instanceProvider.Get(service.Value.ImplementationType));
+            int index = 0;  
 
-                if (!canAddInstanceProvider)
-                {
-                    throw new InvalidOperationException($"Failed to add instance provider for service {service.Value.ServiceType}.");
-                }
+            foreach (var service in _serviceCollection)
+            {
+                _cachedInstanceProviders[index] = _instanceProvider.Get(service.ImplementationType);
+                _keyedServiceCollection[index] = service;
+                ServiceKeySetter.Set(service.ServiceType, index);
+                index++;
             }
         }
 
@@ -38,17 +45,19 @@ namespace Jbmurr.FastDI
             return new ServiceProvider(this);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetService<T>() where T : class
         {
-            var service = _categorizedServiceCollection.Combined[typeof(T)];
-            return null;
-
+            var service = _serviceCollection[ServiceKey<T>.Id];
+            return (T)_cachedInstanceProviders[ServiceKey<T>.Id](_rootServiceProvider);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 
         internal T GetService<T>(ServiceProvider serviceProvider) where T : class
         {
-            var service = _categorizedServiceCollection.Combined[typeof(T)];
-            return (T)_cachedInstanceProviders[service](serviceProvider);
+            var service = _serviceCollection[ServiceKey<T>.Id];
+            return (T)_cachedInstanceProviders[ServiceKey<T>.Id](_rootServiceProvider);
         }
 
         public void Dispose()

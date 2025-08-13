@@ -54,7 +54,7 @@ namespace Jbmurr.FastDI.Abstractions
             serviceCollection._services[typeof(ServiceType)] = new Service(typeof(ServiceType), typeof(ImplementationType), Scope.Scoped, instanceFactory);
         }
 
-        public static ConcurrentDictionary<Type, Service> ToConcurrentDictionary(this ServiceCollection serviceCollection)
+        public static IDictionary<Type, Service> ToDictionary(this ServiceCollection serviceCollection)
         {
             return serviceCollection._services;
         }
