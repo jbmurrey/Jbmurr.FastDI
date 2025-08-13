@@ -125,7 +125,7 @@ namespace Jbmurr.FastDI.Tests
             var sp = myServices.BuildServiceProvider();
             using (var scope = sp.CreateScope())
             {
-                scope.GetService<MainClass>();
+               var x = scope.GetService<MainClass>();
                 scope.GetService<DepA1a>();
             }
         

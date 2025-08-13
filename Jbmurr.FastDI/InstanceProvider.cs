@@ -5,23 +5,20 @@ using System.Reflection;
 
 namespace Jbmurr.FastDI
 {
-    public class InstanceProvider : IInstanceProvider
+    internal class InstanceProvider : IInstanceProvider
     {
         private static readonly MethodInfo GetServiceGenericMethod =
-            typeof(Abstractions.IServiceProvider)
+            typeof(ServiceProvider)
                 .GetMethods()
-                .First(m => m.Name == nameof(Abstractions.IServiceProvider.GetService) && m.IsGenericMethodDefinition);
-
-        // Change the IInstanceProvider interface to match:
-        // Func<Abstractions.IServiceProvider, object> Get(Type type);
-        public Func<Abstractions.IServiceProvider, object> Get(Type type)
+                .First(m => m.Name == nameof(ServiceProvider.GetService) && m.IsGenericMethodDefinition);
+        public Func<ServiceProvider, object> Get(Type type)
         {
             var constructor = type.GetConstructors()
                 .OrderByDescending(c => c.GetParameters().Length)
                 .FirstOrDefault()
                 ?? throw new InvalidOperationException($"No public constructors found for {type}.");
 
-            var spParam = Expression.Parameter(typeof(Abstractions.IServiceProvider), "sp");
+            var spParam = Expression.Parameter(typeof(ServiceProvider), "sp");
 
             var args = constructor.GetParameters()
                 .Select(p =>
@@ -30,7 +27,7 @@ namespace Jbmurr.FastDI
             var newExpr = Expression.New(constructor, args);
             var body = Expression.Convert(newExpr, typeof(object));
 
-            var lambda = Expression.Lambda<Func<Abstractions.IServiceProvider, object>>(body, spParam);
+            var lambda = Expression.Lambda<Func<ServiceProvider, object>>(body, spParam);
             return lambda.Compile();
         }
     }

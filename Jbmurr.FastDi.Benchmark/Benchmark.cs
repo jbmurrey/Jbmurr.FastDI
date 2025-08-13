@@ -129,14 +129,14 @@ public class Benchmark
         }
     }
 
-    [Benchmark]
-    public void Mine()
-    {
+    //[Benchmark]
+    //public void Mine()
+    //{
 
-        var x = new RecursiveCost();
+    //    var x = new RecursiveCost();
 
-        x.NTimes(1000);
-    }
+    //    x.NTimes(1000);
+    //}
 
 
     [Benchmark]

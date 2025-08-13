@@ -1,7 +1,7 @@
 ﻿namespace Jbmurr.FastDI
 {
-    public interface IInstanceProvider
+    internal interface IInstanceProvider
     {
-        Func<Abstractions.IServiceProvider,object> Get(Type type);
+        Func<ServiceProvider,object> Get(Type type);
     }
 }

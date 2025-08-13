@@ -5,10 +5,10 @@ namespace Jbmurr.FastDI.Abstractions
     public static class ServiceExtensions
     {
 
-        public static IServiceProvider BuildServiceProvider(this ServiceCollection serviceCollection, IInstanceProvider? provider = null)
+        public static IServiceProvider BuildServiceProvider(this ServiceCollection serviceCollection)
         {
-     
-            return new RootServiceProvider(serviceCollection, provider ?? new InstanceProvider());
+
+            return new RootServiceProvider(serviceCollection, new InstanceProvider());
         }
     }
 }
