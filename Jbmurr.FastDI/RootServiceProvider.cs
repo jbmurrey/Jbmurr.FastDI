@@ -6,20 +6,25 @@ namespace Jbmurr.FastDI
 {
     internal sealed class RootServiceProvider : Abstractions.IServiceProvider
     {
-        private HashSet<IDisposable> _disposibleInstances = [];
+        private readonly HashSet<IDisposable> _disposibleInstances = [];
         private readonly ServiceProvider _rootServiceProvider;
         private readonly RegisteredServiceCache _serviceCache;
         private readonly ObjectCache _objectCache;
-        private readonly ObjectCache _scopedCache;
+        private readonly KeyStore _scopedKeyStore;
 
         internal RootServiceProvider(ServiceCollection serviceCollection, IInstanceProvider instanceProvider)
         {
             IReadOnlyList<Service> services = [.. serviceCollection];
 
             _serviceCache = new RegisteredServiceCache(services, instanceProvider);
-            _scopedCache = new ObjectCache(serviceCollection.GetScopedTypes());
-            _objectCache = new ObjectCache(GetTypesToCache(serviceCollection));
+            _objectCache = new ObjectCache(new KeyStoreBuilder()
+                .PopulateKeys(GetTypesToCache(serviceCollection))
+                .Build());
+
             _rootServiceProvider = new ServiceProvider(this, _objectCache, isRoot: true);
+            _scopedKeyStore = new KeyStoreBuilder()
+                .PopulateKeys(serviceCollection.GetScopedTypes())
+                .Build();
         }
 
         private static Type[] GetTypesToCache(ServiceCollection serviceCollection)
@@ -32,11 +37,9 @@ namespace Jbmurr.FastDI
 
         public Abstractions.IServiceProvider CreateScope()
         {
-            _scopedCache.Clear();
-            return new ServiceProvider(this, _scopedCache, isRoot: false);
+            return new ServiceProvider(this, new ObjectCache(_scopedKeyStore), isRoot: false);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetService<T>() where T : class
         {
             var registeredService = _serviceCache.GetRegisteredService<T>();
@@ -49,28 +52,55 @@ namespace Jbmurr.FastDI
             };
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal T GetService<T>(ServiceProvider serviceProvider)
         {
             var registeredService = _serviceCache.GetRegisteredService<T>();
 
+            T instance;
 
-            return registeredService.Scope switch
+            switch (registeredService.Scope)
             {
-                Scope.Singleton => _objectCache.GetOrAdd<T>(() => registeredService.InstanceFactory(serviceProvider)),
-                Scope.Scoped => serviceProvider.ObjectCache.GetOrAdd<T>(() => (T)registeredService.InstanceFactory(_rootServiceProvider)),
-                Scope.Transient => (T)registeredService.InstanceFactory(_rootServiceProvider),
-                _ => throw new Exception($"Scope for type {typeof(T)} not found."),
-            };
+                case Scope.Singleton:
+                    instance = (T)registeredService.InstanceFactory(_rootServiceProvider);
+                    // instance = _objectCache.GetOrAdd<T>(() => registeredService.InstanceFactory(serviceProvider));
+
+                    //if(instance is IDisposable singletonDisposable)
+                    //{
+                    //    _disposibleInstances.Add(singletonDisposable);
+                    //}
+                    break;
+
+                case Scope.Scoped:
+                    instance = (T)registeredService.InstanceFactory(_rootServiceProvider);
+                    //  instance = serviceProvider.ObjectCache.GetOrAdd<T>(() => (T)registeredService.InstanceFactory(_rootServiceProvider));
+
+                    //if(instance is IDisposable scopedDisposable)
+                    //{
+
+                    //    serviceProvider.DisposibleInstances.Add(scopedDisposable);
+                    //}
+
+                    break;
+                case Scope.Transient:
+
+                    instance = (T)registeredService.InstanceFactory(_rootServiceProvider);
+
+                    //if (instance is IDisposable transientDisposable)
+                    //{
+
+                    //    serviceProvider.DisposibleInstances.Add(transientDisposable);
+                    //}
+                    break;
+
+                default:
+                    throw new Exception($"Scope for type {typeof(T)} not found.");
+            }
+
+            return instance;
         }
 
         public void Dispose()
         {
-            if (_disposibleInstances is null)
-            {
-                return;
-            }
-
             foreach (var disposibleInstance in _disposibleInstances)
             {
                 disposibleInstance.Dispose();

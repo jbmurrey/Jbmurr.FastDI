@@ -8,7 +8,7 @@ namespace Jbmurr.FastDI
 {
     internal static class KeyStoreExtensions
     {
-        internal static void PopulateKeys(this KeyStore store, IEnumerable<Type> types)
+        internal static KeyStoreBuilder PopulateKeys(this KeyStoreBuilder store, IEnumerable<Type> types)
         {
             int index = 0;
             foreach (var type in types)
@@ -16,6 +16,8 @@ namespace Jbmurr.FastDI
                 store.Slot(type) = index;
                 index++;
             }
+
+            return store;   
         }
     }
 }

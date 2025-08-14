@@ -5,7 +5,7 @@ namespace Jbmurr.FastDI
 {
     internal sealed class ServiceProvider : Abstractions.IServiceProvider
     {
-        internal HashSet<IDisposable>? DisposibleInstances { get; set; }
+        internal HashSet<IDisposable> DisposibleInstances { get; } = [];
         internal bool IsRoot { get; }
         internal  ObjectCache ObjectCache { get; }
         private readonly RootServiceProvider _rootServiceProvider;
@@ -23,7 +23,6 @@ namespace Jbmurr.FastDI
             return new ServiceProvider(_rootServiceProvider, ObjectCache);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetService<T>() where T : class
         {
             if (IsRoot)
@@ -36,11 +35,6 @@ namespace Jbmurr.FastDI
 
         public void Dispose()
         {
-            if (DisposibleInstances is null)
-            {
-                return;
-            }
-
             foreach (var disposibleInstance in DisposibleInstances)
             {
                 disposibleInstance.Dispose();

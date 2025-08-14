@@ -3,6 +3,7 @@ using Autofac.Util;
 using BenchmarkDotNet.Attributes;
 using DependencyExample;
 using Jbmurr.FastDi.Benchmark;
+using Jbmurr.FastDI;
 using Jbmurr.FastDI.Abstractions;
 using Jbmurr.FastDI.Tests;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,8 +13,13 @@ public class Benchmark
 {
     private Jbmurr.FastDI.Abstractions.IServiceProvider _myContainer;
     private Jbmurr.FastDI.Abstractions.IServiceProvider _myContainer2;
+    private Jbmurr.FastDI.Abstractions.ServiceCollection _services;
     private ServiceProvider _microsoftContainer;
     private IContainer _autofacContainer;
+    private KeyStoreBuilder _keyStore;
+    private KeyStore _readkeyStore;
+    private ObjectCache _objectCache;
+    private MainClass _mainClass;
 
 
     [GlobalSetup]
@@ -50,7 +56,7 @@ public class Benchmark
         _microsoftContainer = services.BuildServiceProvider();
 
         var myServices = new Jbmurr.FastDI.Abstractions.ServiceCollection();
-
+        _services = myServices;
 
         myServices.AddTransient<DepA1a>();
         myServices.AddTransient<DepA2a>();
@@ -73,40 +79,10 @@ public class Benchmark
         myServices.AddTransient<DepC>();
         myServices.AddSingleton<DepD>();
         myServices.AddTransient<MainClass>();
-        myServices.AddScoped<MainClass>(sb =>
-        {
-            // === Level 3 instances ===
-            var a1a = new DepA1a();
-            var a2a = new DepA2a();
-            var b1a = new DepB1a();
-            var b2a = new DepB2a();
-            var c1a = new DepC1a();
-            var c2a = new DepC2a();
-            var d1a = new DepD1a();
-            var d2a = new DepD2a();
-
-            // === Level 2 instances ===
-            var a1 = new DepA1(a1a);
-            var a2 = new DepA2(a2a);
-            var b1 = new DepB1(b1a);
-            var b2 = new DepB2(b2a);
-            var c1 = new DepC1(c1a);
-            var c2 = new DepC2(c2a);
-            var d1 = new DepD1(d1a);
-            var d2 = new DepD2(d2a);
-
-            // === Level 1 instances ===
-            var a = new DepA(a1, a2);
-            var b = new DepB(b1, b2);
-            var c = new DepC(c1, c2);
-            var d = new DepD(d1, d2);
-
-            // === Root instance ===
-            return new MainClass(a, b, c, d);
-        });
+        myServices.AddTransient<MainClass>();
         // Build provider
         _myContainer = myServices.BuildServiceProvider();
-
+        _mainClass = _myContainer.CreateScope().GetService<MainClass>();
         var builder = new ContainerBuilder();
 
         // Leaf level
@@ -147,38 +123,74 @@ public class Benchmark
 
         _myContainer2 = container.BuildServiceProvider();
 
+        _keyStore = new KeyStoreBuilder();
+        foreach (var service in myServices)
+        {
+            _keyStore.Slot(service.ServiceType);
+        }
+
+        _readkeyStore = _keyStore.Build();
+
+
+       // _objectCache = new Jbmurr.FastDI.ObjectCache(myServices.Select(x => x.ServiceType).ToArray());
+
 
     }
 
     [Benchmark]
     public void Microsoft()
     {
-        using (var scope = _microsoftContainer.CreateScope())
+        using (var container = _myContainer.CreateScope())
         {
-            var service = scope.ServiceProvider.GetService<MainClass>();
+            container.GetService<MainClass>();
         }
     }
 
+    [Benchmark]
+    public void Mine()
+    {
+        var x = TypeId<int>.Id;
+
+    }
+
+
     //[Benchmark]
-    //public void Mine()
+    //public void Mine2()
     //{
 
-    //    var x = new RecursiveCost();
+    //    _keyStore.Slot<DepA1a>();
+    //    _keyStore.Slot<DepA2a>();
+    //    _keyStore.Slot<DepB1a>();
+    //    _keyStore.Slot<DepB2a>();
+    //    _keyStore.Slot<DepC1a>();
+    //    _keyStore.Slot<DepC2a>();
+    //    _keyStore.Slot<DepD1a>();
+    //    _keyStore.Slot<DepD2a>();
+    //    _keyStore.Slot<DepA1>();
+    //    _keyStore.Slot<DepA2>();
+    //    _keyStore.Slot<DepB1>();
+    //    _keyStore.Slot<DepB2>();
+    //    _keyStore.Slot<DepC1>();
+    //    _keyStore.Slot<DepC2>();
+    //    _keyStore.Slot<DepD1>();
+    //    _keyStore.Slot<DepD2>();
+    //    _keyStore.Slot<DepA>();
+    //    _keyStore.Slot<DepB>();
+    //    _keyStore.Slot<DepC>();
+    //    _keyStore.Slot<DepD>();
+    //    _keyStore.Slot<MainClass>();
+    //    _keyStore.Slot<MainClass>();
+    //}
 
-    //    x.NTimes(1000);
+    //[Benchmark]
+    //public void Readonly()
+    //{
+    //    int _next = 0;
+    //    _next =Interlocked.Increment(ref _next) - 1;
     //}
 
 
-    [Benchmark]
-    public void Mine2()
-    {
 
-        using (var scope = _myContainer.CreateScope())
-        {
-            var service = scope.GetService<MainClass>();
-        }
-
-    }
     //[Benchmark]
     //public void Autofac()
     //{
@@ -191,6 +203,6 @@ public class Benchmark
     //[Benchmark]
     //public void NoContainerSingletons()
     //{
-
+    //    HashSet<IDisposable> hash = [];
     //}
 }

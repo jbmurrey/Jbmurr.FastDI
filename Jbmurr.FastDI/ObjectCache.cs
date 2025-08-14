@@ -1,28 +1,27 @@
 ﻿namespace Jbmurr.FastDI
 {
-    internal class ObjectCache
+    public class ObjectCache(KeyStore keyStore)
     {
-        private readonly KeyStore _keyStore = new();
-        private readonly object[] _cachedInstances;
-        internal ObjectCache(Type[] types)
-        {
-            _cachedInstances = new object[types.Length];
-            _keyStore.PopulateKeys(types);
-        }
+        private readonly KeyStore _keyStore = keyStore;
+        private readonly object?[] _cachedInstances = new object?[keyStore!.Count];
 
-        internal T GetOrAdd<T>(Func<object> instanceProvider)
+        public T GetOrAdd<T>(Func<object> instanceProvider)
         {
             var slot = _keyStore.Slot<T>();
 
-            if (_cachedInstances[slot] is T obj)
-                return obj;
+            object? cachedInstance = _cachedInstances[slot];
 
-            _cachedInstances[slot] = (T)instanceProvider();
+            if (cachedInstance != null)
+            {
+                return (T)cachedInstance;
+            }
 
-            return (T)_cachedInstances[slot];
+            var instance = (T)instanceProvider();
+            _cachedInstances[slot] = instance;
+            return instance;
         }
 
-        internal void Clear()
+        public void Clear()
         {
             Array.Clear(_cachedInstances, 0, _cachedInstances.Length);
         }

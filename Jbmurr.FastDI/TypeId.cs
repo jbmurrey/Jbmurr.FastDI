@@ -1,4 +1,7 @@
-﻿public static class TypeId<T>
+﻿namespace Jbmurr.FastDI
 {
-    public static readonly int Id = TypeIndex.Allocate();
+    public static class TypeId<T>
+    {
+        public static readonly int Id = TypeIndex.Allocate();
+    }
 }

@@ -5,17 +5,18 @@ namespace Jbmurr.FastDI
     internal class RegisteredServiceCache
     {
         private readonly RegisteredService[] _registeredServices;
-        private readonly KeyStore _keyStore = new();
+        private readonly KeyStore _keyStore;
         internal RegisteredServiceCache(IReadOnlyList<Service> services, IInstanceProvider instanceProvider)
         {
             _registeredServices = new RegisteredService[services.Count];
-            _keyStore.PopulateKeys(services.Select(x => x.ServiceType));
+            _keyStore= new KeyStoreBuilder()
+                .PopulateKeys(services.Select(x => x.ServiceType))
+                .Build();
             PopulateCache(services, instanceProvider);
         }
 
         private void PopulateCache(IReadOnlyList<Service> services, IInstanceProvider instanceProvider)
         {
-
             Func<ServiceProvider, object> instanceFactory;
 
             foreach (var service in services)
