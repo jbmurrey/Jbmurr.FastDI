@@ -156,5 +156,17 @@ namespace Jbmurr.FastDI.Tests
         
 
         }
+
+        [TestMethod]
+        public void Key()
+        {
+            var key = new KeyStore();
+            key.Slot<int>() =5;
+            key.Slot<string>() =5 ;
+            var y = TypeId<string>.Id;
+            var key2 = new KeyStore();
+
+
+        }
     }
 }

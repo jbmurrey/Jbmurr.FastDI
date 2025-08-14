@@ -173,33 +173,11 @@ public class Benchmark
     public void Mine2()
     {
 
-        var a1a = new DepA1a();
-        var a2a = new DepA2a();
-        var b1a = new DepB1a();
-        var b2a = new DepB2a();
-        var c1a = new DepC1a();
-        var c2a = new DepC2a();
-        var d1a = new DepD1a();
-        var d2a = new DepD2a();
+        using (var scope = _myContainer.CreateScope())
+        {
+            var service = scope.GetService<MainClass>();
+        }
 
-        // === Level 2 instances ===
-        var a1 = new DepA1(a1a);
-        var a2 = new DepA2(a2a);
-        var b1 = new DepB1(b1a);
-        var b2 = new DepB2(b2a);
-        var c1 = new DepC1(c1a);
-        var c2 = new DepC2(c2a);
-        var d1 = new DepD1(d1a);
-        var d2 = new DepD2(d2a);
-
-        // === Level 1 instances ===
-        var a = new DepA(a1, a2);
-        var b = new DepB(b1, b2);
-        var c = new DepC(c1, c2);
-        var d = new DepD(d1, d2);
-
-        // === Root instance ===
-        var y = new MainClass(a, b, c, d);
     }
     //[Benchmark]
     //public void Autofac()

@@ -5,22 +5,17 @@ namespace Jbmurr.FastDI
     internal class RegisteredServiceCache
     {
         private readonly RegisteredService[] _registeredServices;
-        internal int[] ServiceKeyMapper { get; }
-        internal int ScopedCount { get; private set; }
-        internal int SingletonCount { get; private set; }
-
+        private readonly KeyStore _keyStore = new();
         internal RegisteredServiceCache(IReadOnlyList<Service> services, IInstanceProvider instanceProvider)
         {
             _registeredServices = new RegisteredService[services.Count];
-            ServiceKeyMapper = new int[services.Count];
+            _keyStore.PopulateKeys(services.Select(x => x.ServiceType));
             PopulateCache(services, instanceProvider);
         }
 
         private void PopulateCache(IReadOnlyList<Service> services, IInstanceProvider instanceProvider)
         {
-            int totalIndex = 0;
-            int scopedIndex = 0;
-            int singletonIndex = 0;
+
             Func<ServiceProvider, object> instanceFactory;
 
             foreach (var service in services)
@@ -34,32 +29,15 @@ namespace Jbmurr.FastDI
                     instanceFactory = instanceProvider.Get(service.ImplementationType);
                 }
 
-                _registeredServices[totalIndex] = new RegisteredService(service.Scope, service, instanceFactory);
-                ServiceKeySetter.Set(service.ServiceType, totalIndex);
-
-                switch (service.Scope)
-                {
-                    case Scope.Singleton:
-                        ServiceKeyMapper[totalIndex] = singletonIndex++;
-                        break;
-                    case Scope.Scoped:
-                        ServiceKeyMapper[totalIndex] = scopedIndex++;
-                        break;
-                    case Scope.Transient:
-                        ServiceKeyMapper[totalIndex] = -1;
-                        break;
-                }
-
-                totalIndex++;
+                var slot = _keyStore.Slot(service.ServiceType);
+                _registeredServices[slot] = new RegisteredService(service.Scope, service, instanceFactory,slot);
             }
-
-            ScopedCount = scopedIndex;
-            SingletonCount = singletonIndex;
         }
 
         internal RegisteredService GetRegisteredService<T>()
         {
-            return _registeredServices[ServiceKey<T>.Id];
+            int slot = _keyStore.Slot<T>();
+            return _registeredServices[slot];
         }
     }
 }

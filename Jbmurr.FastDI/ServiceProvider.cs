@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Buffers;
+using System.Runtime.CompilerServices;
 
 namespace Jbmurr.FastDI
 {
@@ -6,20 +7,20 @@ namespace Jbmurr.FastDI
     {
         internal HashSet<IDisposable>? DisposibleInstances { get; set; }
         internal bool IsRoot { get; }
-        internal object?[] CachedInstances { get; }
+        internal  ObjectCache ObjectCache { get; }
         private readonly RootServiceProvider _rootServiceProvider;
-
-
-        internal ServiceProvider(RootServiceProvider rootServiceProvider, int scopedCount, bool isRoot = false)
+       
+        internal ServiceProvider(RootServiceProvider rootServiceProvider, ObjectCache scopedObjectCache, bool isRoot = false)
         {
             IsRoot = isRoot;
             _rootServiceProvider = rootServiceProvider;
-            CachedInstances = new object?[scopedCount];
+            ObjectCache = scopedObjectCache;
         }
 
         public Abstractions.IServiceProvider CreateScope()
         {
-            return new ServiceProvider(_rootServiceProvider, CachedInstances.Length);
+            ObjectCache.Clear();
+            return new ServiceProvider(_rootServiceProvider, ObjectCache);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -27,10 +28,10 @@ namespace Jbmurr.FastDI
         {
             if (IsRoot)
             {
-                return _rootServiceProvider.GetService<T>();   
+                return _rootServiceProvider.GetService<T>();
             }
 
-            return _rootServiceProvider.GetService<T>(this);
+            return  _rootServiceProvider.GetService<T>(this);
         }
 
         public void Dispose()

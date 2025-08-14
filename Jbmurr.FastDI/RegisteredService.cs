@@ -1,24 +1,12 @@
 ﻿using Jbmurr.FastDI.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Jbmurr.FastDI
 {
-    internal class RegisteredService
+    internal class RegisteredService(Scope scope, Service service, Func<ServiceProvider, object> instanceProvider, int key)
     {
-        public RegisteredService(Scope scope, Service service, Func<ServiceProvider, object> instanceProvider)
-        {
-            Scope = scope;
-            Service = service;
-            InstanceFactory = instanceProvider;
-        }
-
-        public Scope Scope { get; }
-        public Service Service { get; }
-        public Func<ServiceProvider, object> InstanceFactory { get; }
-
+        public Scope Scope { get; } = scope;
+        public Service Service { get; } = service;
+        public Func<ServiceProvider, object> InstanceFactory { get; } = instanceProvider;
+        public int Key { get; } = key;
     }
 }
