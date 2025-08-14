@@ -140,16 +140,19 @@ public class Benchmark
     [Benchmark]
     public void Microsoft()
     {
-        using (var container = _myContainer.CreateScope())
+        using (var container = _microsoftContainer.CreateScope())
         {
-            container.GetService<MainClass>();
+            container.ServiceProvider.GetService<MainClass>();
         }
     }
 
     [Benchmark]
     public void Mine()
     {
-        var x = TypeId<int>.Id;
+        using (var container = _myContainer.CreateScope())
+        {
+            container.GetService<MainClass>();
+        }
 
     }
 
