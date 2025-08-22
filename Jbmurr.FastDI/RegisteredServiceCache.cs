@@ -4,23 +4,21 @@ namespace Jbmurr.FastDI
 {
     internal class RegisteredServiceCache
     {
-        private readonly RegisteredService[] _registeredServices;
-        private readonly KeyStore _keyStore;
+        internal readonly RegisteredService[] _registeredServices;
+ 
         internal RegisteredServiceCache(IReadOnlyList<Service> services, IInstanceProvider instanceProvider)
         {
             _registeredServices = new RegisteredService[services.Count];
-            _keyStore= new KeyStoreBuilder()
-                .PopulateKeys(services.Select(x => x.ServiceType))
-                .Build();
+
             PopulateCache(services, instanceProvider);
         }
 
         private void PopulateCache(IReadOnlyList<Service> services, IInstanceProvider instanceProvider)
         {
-            Func<ServiceProvider, object> instanceFactory;
-
-            foreach (var service in services)
+            int i = 0;
+            foreach (var service in services.Where(x => x.Scope == Scope.Singleton))
             {
+                Func<ServiceProvider, object> instanceFactory;
                 if (service.InstanceFactory != null)
                 {
                     instanceFactory = service.InstanceFactory;
@@ -30,15 +28,51 @@ namespace Jbmurr.FastDI
                     instanceFactory = instanceProvider.Get(service.ImplementationType);
                 }
 
-                var slot = _keyStore.Slot(service.ServiceType);
-                _registeredServices[slot] = new RegisteredService(service.Scope, service, instanceFactory,slot);
+                ServiceKey.Set(service.ServiceType, i);
+                _registeredServices[i] = new RegisteredService(service.Scope, service, instanceFactory, i);
+                i++;
             }
+
+            int j = 0;
+            foreach (var service in services.Where(x => x.Scope == Scope.Scoped))
+            {
+                Func<ServiceProvider, object> instanceFactory;
+                if (service.InstanceFactory != null)
+                {
+                    instanceFactory = service.InstanceFactory;
+                }
+                else
+                {
+                    instanceFactory = instanceProvider.Get(service.ImplementationType);
+                }
+                ServiceKey.Set(service.ServiceType, i);         
+                _registeredServices[i++] = new RegisteredService(service.Scope, service, instanceFactory, j);
+                j++;
+            }
+
+      
+            foreach (var service in services.Where(x => x.Scope == Scope.Transient))
+            {
+                Func<ServiceProvider, object> instanceFactory;
+                if (service.InstanceFactory != null)
+                {
+                    instanceFactory = service.InstanceFactory;
+                }
+                else
+                {
+                    instanceFactory = instanceProvider.Get(service.ImplementationType);
+                }
+                
+                ServiceKey.Set(service.ServiceType, i);
+                _registeredServices[i++] = new RegisteredService(service.Scope, service, instanceFactory, 0);
+            }
+
+
         }
 
         internal RegisteredService GetRegisteredService<T>()
         {
-            int slot = _keyStore.Slot<T>();
-            return _registeredServices[slot];
+            return _registeredServices[5];
         }
     }
 }

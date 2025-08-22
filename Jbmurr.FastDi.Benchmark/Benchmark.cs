@@ -1,28 +1,30 @@
 ﻿using Autofac;
-using Autofac.Util;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Diagnostics.Windows.Configs;
 using DependencyExample;
-using Jbmurr.FastDi.Benchmark;
 using Jbmurr.FastDI;
 using Jbmurr.FastDI.Abstractions;
 using Jbmurr.FastDI.Tests;
 using Microsoft.Extensions.DependencyInjection;
-[MemoryDiagnoser]
+using BenchmarkDotNet.Diagnostics.Windows;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Diagnosers;
 
+[MemoryDiagnoser]
+[DisassemblyDiagnoser(printSource: true, exportCombinedDisassemblyReport: true)]
 public class Benchmark
 {
     private Jbmurr.FastDI.Abstractions.IServiceProvider _myContainer;
     private Jbmurr.FastDI.Abstractions.IServiceProvider _myContainer2;
     private Jbmurr.FastDI.Abstractions.ServiceCollection _services;
-    private ServiceProvider _microsoftContainer;
+    private Microsoft.Extensions.DependencyInjection.ServiceProvider _microsoftContainer;
     private IContainer _autofacContainer;
-    private KeyStoreBuilder _keyStore;
-    private KeyStore _readkeyStore;
-    private ObjectCache _objectCache;
+
     private MainClass _mainClass;
 
 
     [GlobalSetup]
+
     public void GlobalSetup()
     {
 
@@ -63,23 +65,23 @@ public class Benchmark
         myServices.AddTransient<DepB1a>();
         myServices.AddTransient<DepB2a>();
         myServices.AddTransient<DepC1a>();
-        myServices.AddScoped<DepC2a>();
+        myServices.AddTransient<DepC2a>();
         myServices.AddTransient<DepD1a>();
         myServices.AddTransient<DepD2a>();
-        myServices.AddScoped<DepA1>();
+        myServices.AddTransient<DepA1>();
         myServices.AddTransient<DepA2>();
         myServices.AddTransient<DepB1>();
-        myServices.AddTransient<DepB2>();
-        myServices.AddTransient<DepC1>();
+        myServices.AddSingleton<DepB2>();
+        myServices.AddSingleton<DepC1>();
         myServices.AddSingleton<DepC2>();
-        myServices.AddTransient<DepD1>();
+        myServices.AddSingleton<DepD1>();
         myServices.AddTransient<DepD2>();
         myServices.AddTransient<DepA>();
         myServices.AddTransient<DepB>();
         myServices.AddTransient<DepC>();
-        myServices.AddSingleton<DepD>();
+        myServices.AddTransient<DepD>();
         myServices.AddTransient<MainClass>();
-        myServices.AddTransient<MainClass>();
+        myServices.AddSingleton<MainClass>();
         // Build provider
         _myContainer = myServices.BuildServiceProvider();
         _mainClass = _myContainer.CreateScope().GetService<MainClass>();
@@ -123,36 +125,27 @@ public class Benchmark
 
         _myContainer2 = container.BuildServiceProvider();
 
-        _keyStore = new KeyStoreBuilder();
-        foreach (var service in myServices)
-        {
-            _keyStore.Slot(service.ServiceType);
-        }
-
-        _readkeyStore = _keyStore.Build();
 
 
-       // _objectCache = new Jbmurr.FastDI.ObjectCache(myServices.Select(x => x.ServiceType).ToArray());
+        // _objectCache = new Jbmurr.FastDI.ObjectCache(myServices.Select(x => x.ServiceType).ToArray());
 
 
     }
 
-    [Benchmark]
-    public void Microsoft()
-    {
-        using (var container = _microsoftContainer.CreateScope())
-        {
-            container.ServiceProvider.GetService<MainClass>();
-        }
-    }
+    //[Benchmark]
+    //public void Microsoft()
+    //{
+    //    using (var container = _microsoftContainer.CreateScope())
+    //    {
+    //        container.ServiceProvider.GetService<MainClass>();
+    //    }
+    //}
 
     [Benchmark]
     public void Mine()
     {
-        using (var container = _myContainer.CreateScope())
-        {
-            container.GetService<MainClass>();
-        }
+        using var sp = _myContainer.CreateScope();
+        sp.GetService<MainClass>();
 
     }
 
