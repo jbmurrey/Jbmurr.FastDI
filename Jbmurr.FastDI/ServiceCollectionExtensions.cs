@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 namespace Jbmurr.FastDI.Abstractions
 {
@@ -7,16 +8,12 @@ namespace Jbmurr.FastDI.Abstractions
 
         public static IServiceProvider BuildServiceProvider(this ServiceCollection serviceCollection)
         {
+            if (RuntimeFeature.IsDynamicCodeSupported)
+            {
+                return new RootServiceProvider(serviceCollection, new DynamicInstanceProvider());
+            }
 
-            return new RootServiceProvider(serviceCollection, new InstanceProvider());
-        }
-
-        public static Type[] GetScopedTypes(this ServiceCollection serviceCollection)
-        {
-            return serviceCollection
-                .Where(x => x.Scope == Scope.Scoped)
-                .Select(x => x.ServiceType)
-                .ToArray();
+            return new RootServiceProvider(serviceCollection,new InstanceProvider());   
         }
     }
 }

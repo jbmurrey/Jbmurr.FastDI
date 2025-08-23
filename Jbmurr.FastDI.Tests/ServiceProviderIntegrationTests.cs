@@ -91,43 +91,37 @@ namespace Jbmurr.FastDI.Tests
         public void Test()
         {
             var myServices = new Jbmurr.FastDI.Abstractions.ServiceCollection();
-
-            // Leaf level
-            myServices.AddScoped<DepA1a>();
-            myServices.AddScoped<DepA2a>();
-            myServices.AddScoped<DepB1a>();
-            myServices.AddScoped<DepB2a>();    
-            myServices.AddScoped<DepC1a>();
-            myServices.AddScoped<DepC2a>();
-            myServices.AddScoped<DepD1a>();
-            myServices.AddScoped<DepD2a>();
-
-            // Mid level
-            myServices.AddSingleton<DepA1>();
-            myServices.AddSingleton<DepA2>();
-            myServices.AddSingleton<DepB1>();
-            myServices.AddSingleton<DepB2>();
-
-            myServices.AddSingleton<DepC1>();
-            myServices.AddSingleton<DepC2>();
-            myServices.AddSingleton<DepD1>();
-            myServices.AddSingleton<DepD2>();
-
-            // Top level dependencies
+            myServices.AddTransient<DepA1a>();
+            myServices.AddTransient<DepA2a>();
+            myServices.AddTransient<DepB1a>();
+            myServices.AddTransient<DepB2a>();
+            myServices.AddTransient<DepC1a>();
+            myServices.AddTransient<DepC2a>();
+            myServices.AddTransient<DepD1a>();
+            myServices.AddTransient<DepD2a>();
+            myServices.AddTransient<DepA1>();
+            myServices.AddTransient<DepA2>();
+            myServices.AddTransient<DepB1>();
+            myServices.AddTransient<DepB2>();
+            myServices.AddTransient<DepC1>();
+            myServices.AddTransient<DepC2>();
+            myServices.AddTransient<DepD1>();
+            myServices.AddTransient<DepD2>();
             myServices.AddTransient<DepA>();
             myServices.AddTransient<DepB>();
             myServices.AddTransient<DepC>();
             myServices.AddTransient<DepD>();
-
-            // Root
             myServices.AddTransient<MainClass>();
-
+            myServices.AddTransient<MainClass>();
             // Build provider
-            var sp = myServices.BuildServiceProvider();
-            using var scope = sp.CreateScope();
-            var yy = scope.GetService<MainClass>();
+            myServices.BuildServiceProvider();
+            var container = new Jbmurr.FastDI.Abstractions.ServiceCollection();
+            container.AddSingleton<Jbmurr.FastDI.Tests.Disposable>();
+            container.AddScoped<ImplClass2>();
 
-  
+            container.BuildServiceProvider();
+
+
 
 
         }

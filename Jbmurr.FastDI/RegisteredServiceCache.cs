@@ -28,8 +28,9 @@ namespace Jbmurr.FastDI
                     instanceFactory = instanceProvider.Get(service.ImplementationType);
                 }
 
-                ServiceKey.Set(service.ServiceType, i);
-                _registeredServices[i] = new RegisteredService(service.Scope, service, instanceFactory, i);
+                int id = ServiceKey.GetId(service.ServiceType);
+                Console.WriteLine("WHY");
+                _registeredServices[id] = new RegisteredService(service.Scope, service, instanceFactory, i);
                 i++;
             }
 
@@ -45,8 +46,9 @@ namespace Jbmurr.FastDI
                 {
                     instanceFactory = instanceProvider.Get(service.ImplementationType);
                 }
-                ServiceKey.Set(service.ServiceType, i);         
-                _registeredServices[i++] = new RegisteredService(service.Scope, service, instanceFactory, j);
+
+                int id = ServiceKey.GetId(service.ServiceType);
+                _registeredServices[id] = new RegisteredService(service.Scope, service, instanceFactory, j);
                 j++;
             }
 
@@ -62,11 +64,11 @@ namespace Jbmurr.FastDI
                 {
                     instanceFactory = instanceProvider.Get(service.ImplementationType);
                 }
-                
-                ServiceKey.Set(service.ServiceType, i);
-                _registeredServices[i++] = new RegisteredService(service.Scope, service, instanceFactory, 0);
-            }
 
+                int id = ServiceKey.GetId(service.ServiceType);
+                _registeredServices[id] = new RegisteredService(service.Scope, service, instanceFactory, null);
+                Console.WriteLine("IS this first?");
+            }
 
         }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -7,28 +8,31 @@ namespace Jbmurr.FastDI
 {
     internal class InstanceProvider : IInstanceProvider
     {
-        private static readonly MethodInfo GetServiceGenericMethod =
-            typeof(ServiceProvider)
-                .GetMethods()
-                .First(m => m.Name == nameof(ServiceProvider.GetService) && m.IsGenericMethodDefinition);
+        public static ConcurrentDictionary<Type, ConstructorInfo> _cachedConstructorInfo = new();
+        public static ConcurrentDictionary<ConstructorInfo, ParameterInfo[]> _cachedParameterInfo = new();
+
         public Func<ServiceProvider, object> Get(Type type)
         {
-            var constructor = type.GetConstructors()
-                .OrderByDescending(c => c.GetParameters().Length)
-                .FirstOrDefault()
-                ?? throw new InvalidOperationException($"No public constructors found for {type}.");
+            var constructorInfo = _cachedConstructorInfo.GetOrAdd(type, type.GetConstructors()
+                 .OrderByDescending(c => c.GetParameters().Length)
+                 .FirstOrDefault()
+                 ?? throw new InvalidOperationException($"No public constructors found for {type}."));
 
-            var spParam = Expression.Parameter(typeof(ServiceProvider), "sp");
+            return (serviceProvider) => Get(serviceProvider, constructorInfo);
+        }
 
-            var args = constructor.GetParameters()
-                .Select(p =>
-                    Expression.Call(spParam, GetServiceGenericMethod.MakeGenericMethod(p.ParameterType)));
+        private static object Get(ServiceProvider serviceProvider, ConstructorInfo constructorInfo)
+        {
+            var parameters = _cachedParameterInfo.GetOrAdd(constructorInfo, (cInfo) => cInfo.GetParameters());
 
-            var newExpr = Expression.New(constructor, args);
-            var body = Expression.Convert(newExpr, typeof(object));
+            object[] arguments = new object[parameters.Length];
 
-            var lambda = Expression.Lambda<Func<ServiceProvider, object>>(body, spParam);
-            return lambda.Compile();
+            for (int index = 0; index < parameters.Length; index++)
+            {
+                arguments[index] = serviceProvider.GetService(parameters[index].ParameterType);
+            }
+
+            return constructorInfo.Invoke(arguments);
         }
     }
 }

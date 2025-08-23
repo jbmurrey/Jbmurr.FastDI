@@ -5,19 +5,19 @@ namespace Jbmurr.FastDI
 {
     public sealed class ServiceProvider(RootServiceProvider rootServiceProvider, int scopedCount, bool isRoot = false) : Abstractions.IServiceProvider
     {
-        internal HashSet<IDisposable>? _disposableInstances;
-        internal HashSet<IDisposable> DisposibleInstances => _disposableInstances ??= [];
+        internal HashSet<IDisposable> DisposibleInstances { get; } = [];
+        internal object[] ObjectCache { get; } = new object[scopedCount];
+        internal RootServiceProvider RootServiceProvider { get; } = rootServiceProvider;
         internal bool IsRoot { get; } = isRoot;
-        internal object[]? _objectCache;
-        internal object[] ObjectCache => _objectCache ??= new object[scopedCount];
-
-        private readonly RootServiceProvider _rootServiceProvider = rootServiceProvider;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T GetService<T>() where T : class => _rootServiceProvider.GetService<T>(this);
+        public T GetService<T>() where T : class => RootServiceProvider.GetService<T>(this);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]  
+        public Abstractions.IServiceProvider CreateScope() => new ServiceProvider(RootServiceProvider, scopedCount);
+       
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Abstractions.IServiceProvider CreateScope() => new ServiceProvider(_rootServiceProvider, scopedCount);
+        public object GetService(Type serviceType) => RootServiceProvider.GetService(this, serviceType);
 
         public void Dispose()
         {

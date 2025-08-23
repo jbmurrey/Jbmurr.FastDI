@@ -1,8 +1,8 @@
 using Jbmurr.FastDI.Abstractions;
 
 namespace Jbmurr.FastDI.Tests
-{
-    [TestClass]
+{                 
+    [TestClass]                                                          
     public class ServiceProviderTests
     {
         [TestMethod]

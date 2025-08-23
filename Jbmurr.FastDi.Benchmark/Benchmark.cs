@@ -71,20 +71,19 @@ public class Benchmark
         myServices.AddTransient<DepA1>();
         myServices.AddTransient<DepA2>();
         myServices.AddTransient<DepB1>();
-        myServices.AddSingleton<DepB2>();
-        myServices.AddSingleton<DepC1>();
-        myServices.AddSingleton<DepC2>();
-        myServices.AddSingleton<DepD1>();
+        myServices.AddTransient<DepB2>();
+        myServices.AddTransient<DepC1>();
+        myServices.AddTransient<DepC2>();
+        myServices.AddTransient<DepD1>();
         myServices.AddTransient<DepD2>();
         myServices.AddTransient<DepA>();
         myServices.AddTransient<DepB>();
         myServices.AddTransient<DepC>();
         myServices.AddTransient<DepD>();
         myServices.AddTransient<MainClass>();
-        myServices.AddSingleton<MainClass>();
+        myServices.AddTransient<MainClass>();
         // Build provider
         _myContainer = myServices.BuildServiceProvider();
-        _mainClass = _myContainer.CreateScope().GetService<MainClass>();
         var builder = new ContainerBuilder();
 
         // Leaf level
@@ -119,11 +118,11 @@ public class Benchmark
         _autofacContainer = builder.Build();
 
 
-        var container = new Jbmurr.FastDI.Abstractions.ServiceCollection();
-        container.AddSingleton<Jbmurr.FastDI.Tests.Disposable>();
-        container.AddScoped<ImplClass2>();
+        //var container = new Jbmurr.FastDI.Abstractions.ServiceCollection();
+        //container.AddSingleton<Jbmurr.FastDI.Tests.Disposable>();
+        //container.AddScoped<ImplClass2>();
 
-        _myContainer2 = container.BuildServiceProvider();
+      //  _myContainer2 = container.BuildServiceProvider();
 
 
 
