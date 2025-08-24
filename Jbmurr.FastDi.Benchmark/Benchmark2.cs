@@ -33,21 +33,21 @@ public class Benchmark2
         myServices.AddTransient<DepB1a>();
         myServices.AddTransient<DepB2a>();
         myServices.AddTransient<DepC1a>();
-        myServices.AddScoped<DepC2a>();
+        myServices.AddTransient<DepC2a>();
         myServices.AddTransient<DepD1a>();
         myServices.AddTransient<DepD2a>();
-        myServices.AddScoped<DepA1>();
+        myServices.AddTransient<DepA1>();
         myServices.AddTransient<DepA2>();
         myServices.AddTransient<DepB1>();
         myServices.AddTransient<DepB2>();
         myServices.AddTransient<DepC1>();
-        myServices.AddSingleton<DepC2>();
+        myServices.AddTransient<DepC2>();
         myServices.AddTransient<DepD1>();
         myServices.AddTransient<DepD2>();
         myServices.AddTransient<DepA>();
         myServices.AddTransient<DepB>();
         myServices.AddTransient<DepC>();
-        myServices.AddSingleton<DepD>();
+        myServices.AddTransient<DepD>();
         myServices.AddTransient<MainClass>();
         myServices.AddTransient<MainClass>();
         // Build provider

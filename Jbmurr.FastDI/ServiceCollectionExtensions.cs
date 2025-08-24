@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using Jbmurr.FastDI.InstanceProviders;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
 namespace Jbmurr.FastDI.Abstractions
@@ -10,10 +11,10 @@ namespace Jbmurr.FastDI.Abstractions
         {
             if (RuntimeFeature.IsDynamicCodeSupported)
             {
-                return new RootServiceProvider(serviceCollection, new DynamicInstanceProvider());
+              //  return new RootServiceProvider(serviceCollection, new DynamicInstanceProvider());
             }
 
-            return new RootServiceProvider(serviceCollection,new InstanceProvider());   
+            return new RootServiceProvider(serviceCollection, new InstanceProvider());
         }
     }
 }

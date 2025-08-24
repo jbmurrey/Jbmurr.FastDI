@@ -9,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using BenchmarkDotNet.Diagnostics.Windows;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
+using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 
 [MemoryDiagnoser]
 [DisassemblyDiagnoser(printSource: true, exportCombinedDisassemblyReport: true)]
@@ -17,10 +19,12 @@ public class Benchmark
     private Jbmurr.FastDI.Abstractions.IServiceProvider _myContainer;
     private Jbmurr.FastDI.Abstractions.IServiceProvider _myContainer2;
     private Jbmurr.FastDI.Abstractions.ServiceCollection _services;
-    private Microsoft.Extensions.DependencyInjection.ServiceProvider _microsoftContainer;
+    private System.IServiceProvider _microsoftContainer;
+    private object obj = new();
     private IContainer _autofacContainer;
-
+    private Dictionary<int, object> dict = [];
     private MainClass _mainClass;
+    private ConcurrentDictionary<int, object> _dict = new();
 
 
     [GlobalSetup]
@@ -28,7 +32,7 @@ public class Benchmark
     public void GlobalSetup()
     {
 
-
+        dict[5] = new();
         var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
 
         services.AddTransient<DepA1a>();
@@ -50,12 +54,11 @@ public class Benchmark
         services.AddTransient<DepA>();
         services.AddTransient<DepB>();
         services.AddTransient<DepC>();
-        services.AddSingleton<DepD>();
+        services.AddTransient<DepD>();
         services.AddTransient<MainClass>();
 
 
-        // Build provider
-        _microsoftContainer = services.BuildServiceProvider();
+
 
         var myServices = new Jbmurr.FastDI.Abstractions.ServiceCollection();
         _services = myServices;
@@ -80,8 +83,7 @@ public class Benchmark
         myServices.AddTransient<DepB>();
         myServices.AddTransient<DepC>();
         myServices.AddTransient<DepD>();
-        myServices.AddTransient<MainClass>();
-        myServices.AddTransient<MainClass>();
+        myServices.AddSingleton<MainClass>();
         // Build provider
         _myContainer = myServices.BuildServiceProvider();
         var builder = new ContainerBuilder();
@@ -118,22 +120,12 @@ public class Benchmark
         _autofacContainer = builder.Build();
 
 
-        //var container = new Jbmurr.FastDI.Abstractions.ServiceCollection();
-        //container.AddSingleton<Jbmurr.FastDI.Tests.Disposable>();
-        //container.AddScoped<ImplClass2>();
-
-      //  _myContainer2 = container.BuildServiceProvider();
-
-
-
-        // _objectCache = new Jbmurr.FastDI.ObjectCache(myServices.Select(x => x.ServiceType).ToArray());
-
-
     }
 
     //[Benchmark]
     //public void Microsoft()
     //{
+        
     //    using (var container = _microsoftContainer.CreateScope())
     //    {
     //        container.ServiceProvider.GetService<MainClass>();
@@ -145,59 +137,11 @@ public class Benchmark
     {
         using var sp = _myContainer.CreateScope();
         sp.GetService<MainClass>();
-
     }
 
-
-    //[Benchmark]
-    //public void Mine2()
-    //{
-
-    //    _keyStore.Slot<DepA1a>();
-    //    _keyStore.Slot<DepA2a>();
-    //    _keyStore.Slot<DepB1a>();
-    //    _keyStore.Slot<DepB2a>();
-    //    _keyStore.Slot<DepC1a>();
-    //    _keyStore.Slot<DepC2a>();
-    //    _keyStore.Slot<DepD1a>();
-    //    _keyStore.Slot<DepD2a>();
-    //    _keyStore.Slot<DepA1>();
-    //    _keyStore.Slot<DepA2>();
-    //    _keyStore.Slot<DepB1>();
-    //    _keyStore.Slot<DepB2>();
-    //    _keyStore.Slot<DepC1>();
-    //    _keyStore.Slot<DepC2>();
-    //    _keyStore.Slot<DepD1>();
-    //    _keyStore.Slot<DepD2>();
-    //    _keyStore.Slot<DepA>();
-    //    _keyStore.Slot<DepB>();
-    //    _keyStore.Slot<DepC>();
-    //    _keyStore.Slot<DepD>();
-    //    _keyStore.Slot<MainClass>();
-    //    _keyStore.Slot<MainClass>();
-    //}
-
-    //[Benchmark]
-    //public void Readonly()
-    //{
-    //    int _next = 0;
-    //    _next =Interlocked.Increment(ref _next) - 1;
-    //}
-
-
-
-    //[Benchmark]
-    //public void Autofac()
-    //{
-    //    //using (var scope = _autofacContainer.BeginLifetimeScope())
-    //    //{
-    //    //    scope.Resolve<MainClass>();
-    //    //}
-    //}
-
-    //[Benchmark]
-    //public void NoContainerSingletons()
-    //{
-    //    HashSet<IDisposable> hash = [];
-    //}
+    [Benchmark]
+    public void concurrentdic()
+    {
+        _dict.GetOrAdd(5, _ => new object());
+    }
 }

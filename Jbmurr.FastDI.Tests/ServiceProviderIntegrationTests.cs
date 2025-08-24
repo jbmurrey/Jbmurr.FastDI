@@ -1,6 +1,8 @@
 using DependencyExample;
 using Jbmurr.FastDI.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
+using ServiceCollection = Jbmurr.FastDI.Abstractions.ServiceCollection;
 
 namespace Jbmurr.FastDI.Tests
 {
@@ -107,23 +109,38 @@ namespace Jbmurr.FastDI.Tests
             myServices.AddTransient<DepC2>();
             myServices.AddTransient<DepD1>();
             myServices.AddTransient<DepD2>();
-            myServices.AddTransient<DepA>();
-            myServices.AddTransient<DepB>();
-            myServices.AddTransient<DepC>();
-            myServices.AddTransient<DepD>();
+            myServices.AddSingleton<DepA>();
+            myServices.AddSingleton<DepB>();
+            myServices.AddSingleton<DepC>();
+            myServices.AddSingleton<DepD>();
             myServices.AddTransient<MainClass>();
-            myServices.AddTransient<MainClass>();
+
             // Build provider
             myServices.BuildServiceProvider();
-            var container = new Jbmurr.FastDI.Abstractions.ServiceCollection();
-            container.AddSingleton<Jbmurr.FastDI.Tests.Disposable>();
-            container.AddScoped<ImplClass2>();
+            ;
 
-            container.BuildServiceProvider();
+            var sp = myServices.BuildServiceProvider();
+
+            using var s = sp.CreateScope();
+            var instance = s.GetService<MainClass>();
+            var t = s.GetService<DepC1>();
 
 
 
 
+
+        }
+
+        [TestMethod]
+        public void Micro()
+        {
+            var serviceCollection = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
+            serviceCollection.AddScoped<Circular>();
+          
+
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+
+            serviceProvider.GetRequiredService<Circular>();
         }
 
 

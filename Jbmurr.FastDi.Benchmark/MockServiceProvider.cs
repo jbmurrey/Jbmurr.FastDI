@@ -1,22 +1,22 @@
 ﻿
 namespace Jbmurr.FastDi.Benchmark
 {
-    internal class MockServiceProvider : FastDI.Abstractions.IServiceProvider
-    {
+    //internal class MockServiceProvider : FastDI.Abstractions.IServiceProvider
+    //{
 
-        public FastDI.Abstractions.IServiceProvider CreateScope()
-        {
-            return null;
-        }
+    //    public FastDI.Abstractions.IServiceProvider CreateScope()
+    //    {
+    //        return null;
+    //    }
 
-        public void Dispose()
-        {
+    //    public void Dispose()
+    //    {
 
-        }
+    //    }
 
-        public T GetService<T>() where T : class
-        {
-            throw new NotImplementedException();
-        }
-    }
+    //    public T GetService<T>() where T : class
+    //    {
+    //        throw new NotImplementedException();
+    //    }
+    //}
 }
