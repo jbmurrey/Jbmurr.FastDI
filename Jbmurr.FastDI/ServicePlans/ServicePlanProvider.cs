@@ -16,16 +16,28 @@ namespace Jbmurr.FastDI.ServicePlans
 
         internal ServicePlan GetPlan(Type serviceType)
         {
-            return _servicePlans.GetOrAdd(serviceType,
-            (type) =>
-            {
-                var service = _services[type];
-                return GetPlan(service, _cacheKeyCounter++);
-            });
+            DependencyStack dependencyStack = new();
+
+            return GetPlan(serviceType, dependencyStack);
         }
 
 
-        private ServicePlan GetPlan(Service service, int cacheKey)
+        internal ServicePlan GetPlan(Type serviceType, DependencyStack dependencyStack)
+        {
+            return _servicePlans.GetOrAdd(serviceType,
+          (type) =>
+          {
+              var service = _services[type];
+              dependencyStack.Push(service.ServiceType);
+              var plan = GetPlan(service, _cacheKeyCounter++, dependencyStack);
+              dependencyStack.Pop();
+
+              return plan;
+          });
+        }
+
+
+        private ServicePlan GetPlan(Service service, int cacheKey, DependencyStack dependencyStack)
         {
             if (service.InstanceFactory != null)
             {
@@ -38,7 +50,7 @@ namespace Jbmurr.FastDI.ServicePlans
 
             var parameters = constructorInfo.GetParameters();
 
-            ServicePlan[] servicePlans = parameters.Select(x => GetPlan(x.ParameterType)).ToArray();
+            ServicePlan[] servicePlans = parameters.Select(x => GetPlan(x.ParameterType, dependencyStack)).ToArray();
 
             return new ConstructorPlan(service, constructorInfo, servicePlans, cacheKey);
         }

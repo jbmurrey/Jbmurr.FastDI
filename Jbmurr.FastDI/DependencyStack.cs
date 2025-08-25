@@ -2,26 +2,26 @@
 {
     internal class DependencyStack 
     {
-        internal Stack<int> _stack = new();
+        internal Stack<Type> _stack = new();
 
-        internal void Push(int dependencyKey)
+        internal void Push(Type type)
         {
-            if (_stack.Contains(dependencyKey))
+            if (_stack.Contains(type))
             {
-                ThrowCircularDependency();
+                ThrowCircularDependency(type);
             }
 
-            _stack.Push(dependencyKey);
+            _stack.Push(type);
         }
 
-        internal int Pop()
+        internal Type Pop()
         {
             return _stack.Pop();
         }
 
-        internal static void ThrowCircularDependency()
+        internal static void ThrowCircularDependency(Type type)
         {
-            throw new InvalidOperationException("Circular Dependency Detected");
+            throw new CircularDependencyException($"Circular Dependency Detected for type {type}");
         }
     }
 }
