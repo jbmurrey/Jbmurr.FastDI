@@ -1,4 +1,6 @@
-﻿namespace Jbmurr.FastDI
+﻿using System.Collections.Concurrent;
+
+namespace Jbmurr.FastDI
 {
     public sealed class ServiceProvider(RootServiceProvider rootServiceProvider, bool isRoot = false) : Abstractions.IServiceProvider
     {

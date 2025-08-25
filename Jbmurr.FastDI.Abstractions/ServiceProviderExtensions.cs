@@ -2,9 +2,9 @@
 {
     public static class ServiceProviderExtensions
     {
-        public static object GetService<T>(this IServiceProvider serviceProvider)
+        public static T GetService<T>(this IServiceProvider serviceProvider)
         {
-            return serviceProvider.GetService(typeof(T));
+            return (T)serviceProvider.GetService(typeof(T));
         }
     }
 }

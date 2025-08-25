@@ -1,38 +1,24 @@
 ﻿using Autofac;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Diagnostics.Windows.Configs;
 using DependencyExample;
-using Jbmurr.FastDI;
 using Jbmurr.FastDI.Abstractions;
-using Jbmurr.FastDI.Tests;
 using Microsoft.Extensions.DependencyInjection;
-using BenchmarkDotNet.Diagnostics.Windows;
-using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Diagnosers;
-using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
 
 [MemoryDiagnoser]
 [DisassemblyDiagnoser(printSource: true, exportCombinedDisassemblyReport: true)]
 public class Benchmark
 {
     private Jbmurr.FastDI.Abstractions.IServiceProvider _myContainer;
-    private Jbmurr.FastDI.Abstractions.IServiceProvider _myContainer2;
-    private Jbmurr.FastDI.Abstractions.ServiceCollection _services;
     private System.IServiceProvider _microsoftContainer;
-    private object obj = new();
     private IContainer _autofacContainer;
-    private Dictionary<int, object> dict = [];
-    private MainClass _mainClass;
-    private ConcurrentDictionary<int, object> _dict = new();
+
 
 
     [GlobalSetup]
 
     public void GlobalSetup()
     {
-
-        dict[5] = new();
         var services = new Microsoft.Extensions.DependencyInjection.ServiceCollection();
 
         services.AddTransient<DepA1a>();
@@ -40,15 +26,15 @@ public class Benchmark
         services.AddTransient<DepB1a>();
         services.AddTransient<DepB2a>();
         services.AddTransient<DepC1a>();
-        services.AddScoped<DepC2a>();
+        services.AddTransient<DepC2a>();
         services.AddTransient<DepD1a>();
         services.AddTransient<DepD2a>();
-        services.AddScoped<DepA1>();
+        services.AddTransient<DepA1>();
         services.AddTransient<DepA2>();
         services.AddTransient<DepB1>();
         services.AddTransient<DepB2>();
         services.AddTransient<DepC1>();
-        services.AddSingleton<DepC2>();
+        services.AddTransient<DepC2>();
         services.AddTransient<DepD1>();
         services.AddTransient<DepD2>();
         services.AddTransient<DepA>();
@@ -57,11 +43,9 @@ public class Benchmark
         services.AddTransient<DepD>();
         services.AddTransient<MainClass>();
 
-
-
+        _microsoftContainer = services.BuildServiceProvider();
 
         var myServices = new Jbmurr.FastDI.Abstractions.ServiceCollection();
-        _services = myServices;
 
         myServices.AddTransient<DepA1a>();
         myServices.AddTransient<DepA2a>();
@@ -83,12 +67,12 @@ public class Benchmark
         myServices.AddTransient<DepB>();
         myServices.AddTransient<DepC>();
         myServices.AddTransient<DepD>();
-        myServices.AddSingleton<MainClass>();
-        // Build provider
+        myServices.AddTransient<MainClass>();
+
         _myContainer = myServices.BuildServiceProvider();
+       
         var builder = new ContainerBuilder();
 
-        // Leaf level
         builder.RegisterType<DepA1a>().InstancePerDependency();
         builder.RegisterType<DepA2a>().InstancePerDependency();
         builder.RegisterType<DepB1a>().InstancePerDependency();
@@ -97,8 +81,6 @@ public class Benchmark
         builder.RegisterType<DepC2a>().InstancePerDependency();
         builder.RegisterType<DepD1a>().InstancePerDependency();
         builder.RegisterType<DepD2a>().InstancePerDependency();
-
-        // Mid level
         builder.RegisterType<DepA1>().InstancePerDependency();
         builder.RegisterType<DepA2>().InstancePerDependency();
         builder.RegisterType<DepB1>().InstancePerDependency();
@@ -107,30 +89,21 @@ public class Benchmark
         builder.RegisterType<DepC2>().InstancePerDependency();
         builder.RegisterType<DepD1>().InstancePerDependency();
         builder.RegisterType<DepD2>().InstancePerDependency();
-
-        // Top level
         builder.RegisterType<DepA>().InstancePerDependency();
         builder.RegisterType<DepB>().InstancePerDependency();
         builder.RegisterType<DepC>().InstancePerDependency();
         builder.RegisterType<DepD>().InstancePerDependency();
-
-        // Root
         builder.RegisterType<MainClass>().SingleInstance();
-        // Build the container
         _autofacContainer = builder.Build();
-
-
     }
 
-    //[Benchmark]
-    //public void Microsoft()
-    //{
-        
-    //    using (var container = _microsoftContainer.CreateScope())
-    //    {
-    //        container.ServiceProvider.GetService<MainClass>();
-    //    }
-    //}
+    [Benchmark]
+    public void Microsoft()
+    {
+
+        using var container = _microsoftContainer.CreateScope();
+        container.ServiceProvider.GetService<MainClass>();
+    }
 
     [Benchmark]
     public void Mine()
@@ -140,8 +113,9 @@ public class Benchmark
     }
 
     [Benchmark]
-    public void concurrentdic()
+    public void Autofac()
     {
-        _dict.GetOrAdd(5, _ => new object());
+        using var sp = _autofacContainer.BeginLifetimeScope();
+        sp.Resolve<MainClass>();
     }
 }

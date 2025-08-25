@@ -5,7 +5,6 @@ namespace Jbmurr.FastDI.Abstractions
     public static class ServiceExtensions
     {
         public static void AddSingleton<T>(this ServiceCollection serviceCollection)
-
         {
             serviceCollection.AddSingleton<T, T>();
         }

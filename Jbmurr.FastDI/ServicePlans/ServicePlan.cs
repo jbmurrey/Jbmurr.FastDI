@@ -2,10 +2,10 @@
 
 namespace Jbmurr.FastDI.ServicePlans
 {
-    internal abstract class ServicePlan(Service service, int cacheKey)
+    internal abstract class ServicePlan(Service service, int key)
     {
         internal readonly Service Service = service;
-        internal readonly int CacheKey = cacheKey;
+        internal readonly int Key = key;
     }
 }
 

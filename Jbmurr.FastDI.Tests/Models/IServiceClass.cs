@@ -1,4 +1,4 @@
-﻿namespace Jbmurr.FastDI.Tests
+﻿namespace Jbmurr.FastDI.Tests.Models
 {
     public interface IServiceClass
     {
